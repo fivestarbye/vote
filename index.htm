@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>投票勇者大冒險</title>
+  <style>
+    body {
+      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(to right, #e0f2f1, #ffffff);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px;
+      color: #2e3440;
+      animation: fadeIn 1.5s ease;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .game-box {
+      width: 100%;
+      max-width: 480px;
+      margin: 20px 0;
+      background-color: #ffffffee;
+      padding: 16px;
+      border-radius: 16px;
+      box-shadow: 0 6px 14px rgba(0,0,0,0.15);
+      transition: transform 0.3s;
+    }
+    .game-box:hover {
+      transform: scale(1.01);
+    }
+    .btn-grid {
+      display: flex;
+      justify-content: space-around;
+      margin-top: 16px;
+      gap: 10px;
+    }
+    .btn {
+      flex: 1;
+      padding: 16px;
+      font-size: 1.2em;
+      border: none;
+      border-radius: 12px;
+      background: linear-gradient(to right, #26c6da, #00acc1);
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn:active {
+      transform: scale(0.96);
+      background: #00838f;
+    }
+    .leaderboard {
+      margin-top: 30px;
+      max-width: 480px;
+      text-align: center;
+      background: #ffffffdd;
+      padding: 15px;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    .rules {
+      max-width: 480px;
+      background: #ffffffcc;
+      padding: 16px;
+      border-radius: 10px;
+      margin-top: 10px;
+      font-size: 0.95em;
+    }
+    #eventText {
+      font-weight: bold;
+      margin-top: 10px;
+      min-height: 1.5em;
+    }
+    #restartBtn {
+      margin-top: 10px;
+      display: none;
+      text-align: center;
+    }
+    .quiz-box {
+      margin-top: 16px;
+      padding: 10px;
+      background: #e3f2fd;
+      border-radius: 10px;
+    }
+    .quiz-option {
+      margin: 6px 0;
+      display: block;
+      padding: 10px;
+      border-radius: 6px;
+      background: #bbdefb;
+      cursor: pointer;
+    }
+    .quiz-option:hover {
+      background: #90caf9;
+    }
+  @keyframes flashGreen {
+  0% { background-color: #c8e6c9; }
+  100% { background-color: transparent; }
+}
+@keyframes flashRed {
+  0% { background-color: #ffcdd2; }
+  100% { background-color: transparent; }
+}
+@keyframes flashGreen {
+  0% { background-color: #c8e6c9; }
+  100% { background-color: transparent; }
+}
+@keyframes flashRed {
+  0% { background-color: #ffcdd2; }
+  100% { background-color: transparent; }
+}
+@keyframes moveChar {
+  0% { transform: translateY(0) scale(1); }
+  25% { transform: translateY(-20px) scale(1.2); }
+  50% { transform: translateY(5px) scale(1); }
+  75% { transform: translateY(-10px) scale(1.1); }
+  100% { transform: translateY(0) scale(1); }
+}
+  25% { transform: scale(1.1) translateY(-10px); opacity: 0.8; }
+  50% { transform: scale(1.05) translateY(4px); opacity: 1; }
+  75% { transform: scale(1.1) translateY(-6px); opacity: 0.9; }
+  100% { transform: scale(1) translateY(0); opacity: 1; }
+}
+  50% { transform: scale(1.05) translateY(-4px); }
+  100% { transform: scale(1) translateY(0); }
+}
+@keyframes specialEvent {
+  0% { background-color: #fff3cd; transform: scale(1); }
+  50% { background-color: #ffe082; transform: scale(1.2); }
+  100% { background-color: transparent; transform: scale(1); }
+}
+  100% { background-color: transparent; }
+}
+.character {
+  font-size: 2em;
+  transition: transform 0.3s ease;
+  animation: moveChar 0.6s;
+  margin-bottom: 8px;
+  display: inline-block;
+}
+.special {
+  animation: specialEvent 0.6s ease;
+}
+</style>
+</head>
+<body>
+  <h1>投票勇者大冒險</h1>
+  <div class="rules">
+    <h3>🎯 遊戲規則</h3>
+<ul>
+  <li>每次可選擇 左走、前進 或 右走</li>
+  <li>每個地點可能出現事件（好事或壞事）或罷免小知識問答</li>
+  <li>遊戲至少進行 5 步，之後可能出現「罷免投票所」結局</li>
+  <li>結局將根據分數給予不同評語，並可上傳排行榜</li>
+</ul>
+  </div>
+  <div class="game-box">
+  <div class="character" id="hero">🧍</div>
+    <p id="location">你目前在：</p>
+    <p id="score">分數：0</p>
+    <p id="eventText"></p>
+    <div class="btn-grid">
+      <button class="btn" onclick="move('left')">⬅ 左走</button>
+      <button class="btn" onclick="move('forward')">⬆ 前進</button>
+      <button class="btn" onclick="move('right')">➡ 右走</button>
+    </div>
+    <div class="quiz-box" id="quizBox" style="display:none">
+      <p id="quizQuestion"></p>
+      <div id="quizOptions"></div>
+    </div>
+    <div id="winMessage" style="margin-top:10px;font-weight:bold;"></div>
+    <div id="restartBtn">
+      <button class="btn" onclick="restartGame()">🔄 重新開始</button>
+    </div>
+  </div>
+  <div class="leaderboard">
+    <h3>🏆 排行榜</h3>
+    <ol id="scoreList"></ol>
+    <div id="submitSection" style="display: none">
+      <input type="text" id="playerName" placeholder="你的名字" />
+      <button onclick="submitScore()">提交分數</button>
+    </div>
+  </div>
+  <script>
+    let row = 0, col = 1;
+    let score = 0;
+    let steps = 0;
+    const events = [
+      { name: "遇到冷漠路人", effect: -2 },
+      { name: "假消息干擾", effect: -1 },
+      { name: "好朋友同行", effect: +2 },
+      { name: "撿到身分證", effect: +3 },
+      { name: "空地休息", effect: 0 },
+      { name: "知識挑戰", effect: "quiz" }
+    ];
+
+    const quizzes = [
+  {
+    q: "發起罷免第一階段連署需幾人？",
+    options: ["選舉人總數1%以上", "選舉人總數5%以上", "選舉人總數10%以上"],
+    answer: 0
+  },
+  {
+    q: "罷免案要成立，投票率須達多少？",
+    options: ["10%", "25%", "50%"],
+    answer: 1
+  },
+  {
+    q: "罷免門檻中，贊成票須？",
+    options: ["超過反對票且達投票權人總數四分之一", "過半即可", "與總投票數無關"],
+    answer: 0
+  },
+  {
+    q: "哪一項屬於罷免理由？",
+    options: ["言論不合己意", "重大失職或違法失信", "年紀太大"],
+    answer: 1
+  },
+  {
+    q: "罷免投票結果誰負責公告？",
+    options: ["中選會", "地方選委會", "內政部"],
+    answer: 0
+  },
+  {
+    q: "罷免成功後，該職位如何處理？",
+    options: ["自動補選", "由政府指派", "留下空缺"],
+    answer: 0
+  }
+];
+
+    function updateUI() {
+  const landmarks = [
+    ["基隆港", "瑞芳老街", "平溪天燈"],
+    ["台北101", "中正紀念堂", "士林夜市"],
+    ["新竹城隍廟", "台中公園", "鹿港老街"],
+    ["嘉義檜意森活村", "台南安平古堡", "高雄愛河"],
+    ["墾丁大街", "屏東車城", "台東池上"],
+    ["花蓮七星潭", "宜蘭羅東夜市", "蘭嶼大天池"]
+  ];
+  let name = "未知地點";
+  if (row >= 0 && row < landmarks.length && col >= 0 && col < landmarks[row].length) {
+    name = landmarks[row][col];
+  }
+  document.getElementById("location").textContent = `你目前在：${name}`;
+      document.getElementById("score").textContent = `分數：${score}`;
+    }
+
+    function triggerRandomEvent() {
+  steps++;
+  document.getElementById("quizBox").style.display = "none";
+  if (steps >= 5 && Math.random() < 0.25) {
+    gameEnded = true;
+    document.querySelectorAll('.btn').forEach(btn => btn.disabled = true);
+    updateUI();
+  document.getElementById("hero").classList.remove("special");
+    document.getElementById("eventText").textContent = "你找到了投票所！";
+    document.getElementById("winMessage").textContent =
+      score >= 6 ? '🎉 高分結局：你成功投票！' : '😐 普通結局：勉強完成任務。';
+    document.getElementById("submitSection").style.display = "block";
+    document.getElementById("restartBtn").style.display = "block";
+    
+    
+    return;
+  }
+  const e = events[Math.floor(Math.random() * events.length)];
+  if (e.effect === "quiz") {
+    if (!window.usedQuizIndices) window.usedQuizIndices = [];
+    let availableIndices = quizzes.map((_, idx) => idx).filter(idx => !window.usedQuizIndices.includes(idx));
+    if (availableIndices.length === 0) {
+      window.usedQuizIndices = [];
+      availableIndices = quizzes.map((_, idx) => idx);
+    }
+    const nextIndex = availableIndices[Math.floor(Math.random() * availableIndices.length)];
+    window.usedQuizIndices.push(nextIndex);
+    const quiz = quizzes[nextIndex];
+    document.getElementById("eventText").textContent = "🧠 知識問答挑戰！";
+    showQuiz(quiz);
+    return;
+  }
+  score += e.effect;
+      document.getElementById("eventText").textContent = `${e.name}（分數 ${e.effect > 0 ? '+' + e.effect : e.effect}）`;
+document.getElementById("hero").classList.add("special");
+      updateUI();
+    }
+
+    function showQuiz(quiz) {
+      document.getElementById("quizBox").style.display = "block";
+      document.getElementById("quizQuestion").textContent = quiz.q;
+      const optionsBox = document.getElementById("quizOptions");
+      optionsBox.innerHTML = "";
+      quiz.options.forEach((opt, i) => {
+        const btn = document.createElement("button");
+        btn.textContent = opt;
+        btn.className = "quiz-option";
+        btn.onclick = () => {
+          if (i === quiz.answer) {
+            score += 3;
+            document.getElementById("eventText").textContent = "✅ 答對了！加 3 分！";
+document.getElementById("eventText").style.animation = "flashGreen 0.6s";
+          } else {
+            score -= 1;
+            document.getElementById("eventText").textContent = "❌ 答錯了！扣 1 分！";
+document.getElementById("eventText").style.animation = "flashRed 0.6s";
+          }
+          updateUI();
+          document.getElementById("quizBox").style.display = "none";
+        };
+        optionsBox.appendChild(btn);
+      });
+    }
+
+    function move(direction) {
+  if (document.getElementById("quizBox").style.display === "block") return;
+  if (gameEnded) return;
+  if (direction === "left") col--;
+  else if (direction === "right") col++;
+  else row++;
+
+  const hero = document.getElementById("hero");
+  hero.style.animation = "moveChar 0.6s";
+  setTimeout(() => hero.style.animation = "", 600);
+
+  updateUI();
+  triggerRandomEvent();
+}
+
+    function submitScore() {
+      const name = document.getElementById("playerName").value.trim();
+      if (!name) return alert("請輸入名字");
+      const entry = { name, score, time: Date.now() };
+      const local = JSON.parse(localStorage.getItem("voting_scores") || "[]");
+      local.push(entry);
+      localStorage.setItem("voting_scores", JSON.stringify(local));
+      loadScores();
+      document.getElementById("submitSection").style.display = "none";
+    }
+
+    function loadScores() {
+      const list = document.getElementById("scoreList");
+      list.innerHTML = "";
+      const local = JSON.parse(localStorage.getItem("voting_scores") || "[]");
+      local.sort((a,b) => b.score - a.score).slice(0,5).forEach(entry => {
+        const li = document.createElement("li");
+        li.textContent = `${entry.name}: ${entry.score} 分`;
+        list.appendChild(li);
+      });
+    }
+
+    updateUI();
+    loadScores();
+    let gameEnded = false;
+
+function restartGame() {
+  row = 0;
+  col = 1;
+  score = 0;
+  steps = 0;
+  gameEnded = false;
+  document.getElementById("quizBox").style.display = "none";
+  document.getElementById("winMessage").textContent = "";
+  document.getElementById("submitSection").style.display = "none";
+  document.getElementById("restartBtn").style.display = "none";
+  document.querySelectorAll('.btn').forEach(btn => btn.disabled = false);
+document.getElementById("hero").classList.remove("special");
+  updateUI();
+  document.getElementById("eventText").textContent = "冒險開始！選擇一個方向前進吧！";
+}
+  </script>
+</body>
+</html>
